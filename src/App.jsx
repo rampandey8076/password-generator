@@ -1,23 +1,30 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useRef } from 'react';
+
+const generatePasswordValue = (length, numberAllowed, charAllowed) => {
+  let pass = "";
+  let str = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+
+  if (numberAllowed) str += "0123456789";
+  if (charAllowed) str += "!@#$%^&*";
+
+  for (let i = 0; i < length; i++) {
+    const charIndex = Math.floor(Math.random() * str.length);
+    pass += str.charAt(charIndex);
+  }
+
+  return pass;
+};
 
 const App = () => {
   const [length, setLength] = useState(8);
   const [numberAllowed, setNumberAllowed] = useState(false);
   const [charAllowed, setCharAllowed] = useState(false);
-  const [password, setPassword] = useState("");
+  const [password, setPassword] = useState(() => generatePasswordValue(8, false, false));
   const [copied, setCopied] = useState(false);
   const passwordRef = useRef(null);
 
   const passwordGenerator = useCallback(() => {
-    let pass = "";
-    let str = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-    if (numberAllowed) str += "0123456789";
-    if (charAllowed) str += "!@#$%^&*";
-    for (let i = 0; i < length; i++) {
-      let charIndex = Math.floor(Math.random() * str.length);
-      pass += str.charAt(charIndex);
-    }
-    setPassword(pass);
+    setPassword(generatePasswordValue(length, numberAllowed, charAllowed));
   }, [length, numberAllowed, charAllowed]);
 
   const copyPasswordToClipboard = useCallback(() => {
@@ -37,10 +44,6 @@ const App = () => {
   };
 
   const strength = getStrength();
-
-  useEffect(() => {
-    passwordGenerator();
-  }, [length, numberAllowed, charAllowed, passwordGenerator]);
 
   return (
     <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
@@ -117,7 +120,11 @@ const App = () => {
               max={100}
               value={length}
               className="w-full h-1.5 bg-gray-600 rounded-full appearance-none cursor-pointer accent-violet-500"
-              onChange={(e) => setLength(Number(e.target.value))}
+              onChange={(e) => {
+                const newLength = Number(e.target.value);
+                setLength(newLength);
+                setPassword(generatePasswordValue(newLength, numberAllowed, charAllowed));
+              }}
             />
             <div className="flex justify-between mt-1">
               <span className="text-xs text-gray-500">6</span>
@@ -151,7 +158,11 @@ const App = () => {
                 type="checkbox"
                 id="numberInput"
                 checked={numberAllowed}
-                onChange={() => setNumberAllowed((prev) => !prev)}
+                onChange={() => {
+                  const newValue = !numberAllowed;
+                  setNumberAllowed(newValue);
+                  setPassword(generatePasswordValue(length, newValue, charAllowed));
+                }}
                 className="hidden"
               />
               <span className="text-sm font-medium">Numbers</span>
@@ -180,7 +191,11 @@ const App = () => {
                 type="checkbox"
                 id="charInput"
                 checked={charAllowed}
-                onChange={() => setCharAllowed((prev) => !prev)}
+                onChange={() => {
+                  const newValue = !charAllowed;
+                  setCharAllowed(newValue);
+                  setPassword(generatePasswordValue(length, numberAllowed, newValue));
+                }}
                 className="hidden"
               />
               <span className="text-sm font-medium">Symbols</span>
